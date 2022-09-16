@@ -1653,8 +1653,9 @@ func (v *Viper) AllSettings() map[string]interface{} {
 		value := v.Get(k)
 
 		// to fix case when key has . prefix
-		hasEmptySection := strings.Contains(k, "..") // e.g. data..dockerconfigjson
-		// fmt.Printf("key:[%s]\n", k)
+		hasEmptySection := strings.Contains(k, "..")      // e.g. data..dockerconfigjson
+		hasDotConfPostfix := strings.Contains(k, ".conf") // e.g. data.xx-front-nginx.conf
+		//fmt.Printf("key:[%s]\n", k)
 		k = strings.Replace(k, "..", ".", -1)
 
 		if value == nil {
@@ -1664,12 +1665,31 @@ func (v *Viper) AllSettings() map[string]interface{} {
 		}
 		path := strings.Split(k, v.keyDelim)
 		lastKey := path[len(path)-1]
+
+		var second2Last string
+		var third2Last string
+		if len(path) >= 3 && hasDotConfPostfix {
+			second2Last = path[len(path)-2]
+			third2Last = path[len(path)-3]
+		}
+
 		deepestMap := deepSearch(m, path[0:len(path)-1])
+
 		// set innermost value
 		//fmt.Printf("lastkey:[%s] = [%v]\n", lastKey, value)
 		if hasEmptySection {
 			lastKey = "." + lastKey
 		}
+
+		if hasDotConfPostfix && lastKey == "conf" {
+			m1 := m[third2Last].(map[string]interface{})
+			m2 := m1[second2Last].(map[string]interface{})
+			delete(m2, lastKey)
+			delete(m1, second2Last)
+			m1[second2Last+"."+lastKey] = value
+			continue
+		}
+
 		//fmt.Printf("lastkey:[%s]\n", lastKey)
 		deepestMap[lastKey] = value
 	}
