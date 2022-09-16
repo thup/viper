@@ -1651,8 +1651,12 @@ func (v *Viper) AllSettings() map[string]interface{} {
 	// start from the list of keys, and construct the map one value at a time
 	for _, k := range v.AllKeys() {
 		value := v.Get(k)
+
 		// to fix case when key has . prefix
+		hasEmptySection := strings.Contains(k, "..") // e.g. data..dockerconfigjson
+		// fmt.Printf("key:[%s]\n", k)
 		k = strings.Replace(k, "..", ".", -1)
+
 		if value == nil {
 			// should not happen, since AllKeys() returns only keys holding a value,
 			// check just in case anything changes
@@ -1662,6 +1666,11 @@ func (v *Viper) AllSettings() map[string]interface{} {
 		lastKey := path[len(path)-1]
 		deepestMap := deepSearch(m, path[0:len(path)-1])
 		// set innermost value
+		//fmt.Printf("lastkey:[%s] = [%v]\n", lastKey, value)
+		if hasEmptySection {
+			lastKey = "." + lastKey
+		}
+		//fmt.Printf("lastkey:[%s]\n", lastKey)
 		deepestMap[lastKey] = value
 	}
 	return m
