@@ -220,6 +220,7 @@ type defaultRemoteProvider struct {
 	secretKeyring string
 }
 
+// https://github.com/spf13/viper/issues/324
 func SetKeyDelim(delim string)            { v.keyDelim = delim }
 func (v *Viper) SetKeyDelim(delim string) { v.keyDelim = delim }
 
